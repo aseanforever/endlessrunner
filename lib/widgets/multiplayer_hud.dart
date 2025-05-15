@@ -14,10 +14,11 @@ class MultiplayerHud extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamProvider<PlayerModel?>.value(
       value: PlayerModel.listenToPlayer(game.playerModel.uid),
-      initialData: null,
+      initialData: game.playerModel,
       child: Padding(
         padding: const EdgeInsets.only(top: 10.0),
-        child: Consumer<PlayerModel?>(builder: (context, playerModel, child) {
+        child: Consumer<PlayerModel?>(builder: (context, streamPlayerModel, child) {
+          final PlayerModel? displayPlayerModel = streamPlayerModel ?? game.playerModel;
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,19 +26,19 @@ class MultiplayerHud extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    'Score: ${playerModel?.currentScore ?? 0}',
+                    'Score: ${displayPlayerModel?.currentScore ?? 0}',
                     style: const TextStyle(fontSize: 20, color: Colors.black),
                   ),
                 ],
               ),
               
-              if (playerModel != null)
+              if (displayPlayerModel != null)
                 Column(
                   children: [
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: List.generate(5, (index) {
-                        if (index < playerModel.lives) {
+                        if (index < displayPlayerModel.lives) {
                           return const Icon(
                             Icons.favorite,
                             color: Colors.red,
@@ -61,7 +62,7 @@ class MultiplayerHud extends StatelessWidget {
                       ),
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: playerModel.health / 10,
+                        widthFactor: displayPlayerModel.health / 10,
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(5),

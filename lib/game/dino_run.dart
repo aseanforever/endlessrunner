@@ -21,7 +21,6 @@ import '/game/enemy_manager.dart';
 import '/models/player_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flame/parallax.dart';
-import 'dart:math';
 
 class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
   DinoRun({super.camera, this.roomId, this.isMultiplayer = false});
@@ -65,9 +64,6 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
   Vector2 get virtualSize => camera.viewport.virtualSize;
 
   get highscore => null;
-
-  // Add this field
-  bool _lowMemoryMode = false;
 
   @override
   Future<void> onLoad() async {
@@ -259,71 +255,8 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
     _gameStarted = false;
   }
 
-  // Add this method to check and optimize for memory
-  void _checkMemoryUsage(double dt) {
-    // Check every 5 seconds
-    if (_gameTime % 5 < dt) {
-      // If we've had multiple GC pauses, enable low memory mode
-      if (_consecutiveGcPauses > 2) {
-        _lowMemoryMode = true;
-        _optimizeForLowMemory();
-      }
-    }
-  }
-
-  // Implement memory optimization
-  void _optimizeForLowMemory() {
-    if (_lowMemoryMode) return; // Already optimized
-    
-    _lowMemoryMode = true;
-    
-    // Reduce background layers
-    try {
-      // Find the ParallaxComponent in the backdrop
-      final parallaxComponents = camera.backdrop.children.whereType<ParallaxComponent>();
-      if (parallaxComponents.isNotEmpty) {
-        final parallaxComponent = parallaxComponents.first;
-        // Now we can access the layers
-        if (parallaxComponent.parallax != null && 
-            parallaxComponent.parallax!.layers.length > 3) {
-          // Keep only essential layers (remove layers starting from index 3)
-          for (int i = parallaxComponent.parallax!.layers.length - 1; i >= 3; i--) {
-            parallaxComponent.parallax!.layers.removeAt(i);
-          }
-        }
-      }
-    } catch (e) {
-      print('Error optimizing parallax: $e');
-    }
-    
-    // Reduce enemy spawn rate
-    if (_enemyManager != null) {
-      _enemyManager.setSpawnRateFactor(0.7); // Method approach instead of property
-    }
-  }
-
-  // Monitor for GC pauses
-  int _consecutiveGcPauses = 0;
-  double _lastFrameTime = 0;
-  double _gameTime = 0;
-
   @override
   void update(double dt) {
-    super.update(dt);
-    
-    // Detect large frame time gaps that might indicate GC pauses
-    if (dt > 0.1) { // More than 100ms between frames
-      _consecutiveGcPauses++;
-    } else {
-      _consecutiveGcPauses = max(0, _consecutiveGcPauses - 1);
-    }
-    
-    _gameTime += dt;
-    _lastFrameTime = DateTime.now().millisecondsSinceEpoch / 1000;
-    
-    // Check memory usage periodically
-    _checkMemoryUsage(dt);
-    
     try {
       if (isMultiplayer && gameRoom != null && _gameStarted) {
         // Update score in multiplayer room
@@ -347,6 +280,7 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
     } catch (e) {
       print('Error in update: $e');
     }
+    super.update(dt);
   }
   
   void _reportPlayerDeath() async {

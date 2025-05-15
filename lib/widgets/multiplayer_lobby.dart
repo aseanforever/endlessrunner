@@ -194,51 +194,56 @@ class _MultiplayerLobbyState extends State<MultiplayerLobby> {
   }
 
   Widget _buildJoinCreateRoom() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'Multiplayer Dino Run',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: _createRoom,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(200, 50),
-            ),
-            child: const Text('Create Room', style: TextStyle(fontSize: 18)),
-          ),
-          const SizedBox(height: 20),
-          const Text('OR', style: TextStyle(fontSize: 18)),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: 200,
-            child: TextField(
-              controller: _roomIdController,
-              decoration: const InputDecoration(
-                labelText: 'Room ID',
-                border: OutlineInputBorder(),
-                hintText: '6 digits code',
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Multiplayer Dino Run',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              maxLength: 6,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-            ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: _createRoom,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(200, 50),
+                ),
+                child: const Text('Create Room', style: TextStyle(fontSize: 18)),
+              ),
+              const SizedBox(height: 20),
+              const Text('OR', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: 200,
+                child: TextField(
+                  controller: _roomIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Room ID',
+                    border: OutlineInputBorder(),
+                    hintText: '6 digits code',
+                  ),
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  maxLength: 6,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _joinRoom,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(200, 50),
+                ),
+                child: const Text('Join Room', style: TextStyle(fontSize: 18)),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: _joinRoom,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(200, 50),
-            ),
-            child: const Text('Join Room', style: TextStyle(fontSize: 18)),
-          ),
-        ],
+        ),
       ),
     );
   }
