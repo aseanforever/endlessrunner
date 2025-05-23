@@ -116,4 +116,29 @@ class Dino extends SpriteAnimationGroupComponent<DinoAnimationStates>
     isHit = false;
     speedY = 0.0;
   }
+
+  void reload(Image newImage) {
+    // Tạo animation map mới với hình ảnh mới
+    final newAnimations = {
+      DinoAnimationStates.idle: SpriteAnimation.fromFrameData(
+        newImage,
+        SpriteAnimationData.sequenced(
+          amount: 4,
+          stepTime: 0.1,
+          textureSize: Vector2.all(24),
+        ),
+      ),
+      DinoAnimationStates.hit: SpriteAnimation.fromFrameData(
+        newImage,
+        SpriteAnimationData.sequenced(
+          amount: 3,
+          stepTime: 0.1,
+          textureSize: Vector2.all(24),
+          texturePosition: Vector2(14 * 24, 0),
+        ),
+      ),
+    };
+    animations = newAnimations;
+    current = DinoAnimationStates.idle;
+  }
 }

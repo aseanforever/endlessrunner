@@ -162,8 +162,10 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
   }
 
   Future<void> reloadBackground() async {
+    // Xóa background cũ
     camera.backdrop.removeAll(camera.backdrop.children);
     
+    // Load và thêm background mới
     final parallaxBackground = await loadParallaxComponent(
       _getBackgroundImages(gameSettings.background).map((e) => ParallaxImageData(e)).toList(),
       baseVelocity: Vector2(10, 0),
@@ -171,6 +173,13 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
     );
 
     camera.backdrop.add(parallaxBackground);
+  }
+
+  Future<void> reloadDino() async {
+    if (_dino != null) {
+      await images.load('Dino/${gameSettings.dinoSkin}');
+      _dino.reload(images.fromCache('Dino/${gameSettings.dinoSkin}'));
+    }
   }
 
   void startGamePlay() {
@@ -242,6 +251,12 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
         break;
     }
     super.lifecycleStateChange(state);
+  }
+
+  Future<void> reloadDinoSkin() async {
+    if (_dino != null) {
+      _dino.reload(images.fromCache('Dino/${gameSettings.dinoSkin}'));
+    }
   }
 
 }

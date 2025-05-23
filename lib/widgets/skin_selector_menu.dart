@@ -4,11 +4,15 @@ import 'package:provider/provider.dart';
 import '../models/game_settings.dart';
 import '../game/dino_run.dart';
 
-class SkinSelectorMenu extends StatelessWidget {
-  static const id = 'SkinSelectorMenu';
+class SkinSelectorMenu extends StatelessWidget {  static const id = 'SkinSelectorMenu';
   final DinoRun game;
-
-  const SkinSelectorMenu(this.game, {super.key});
+  SkinSelectorMenu(this.game, {super.key});
+  final Map<String, String> skinPreviews = {
+    'DinoSprites - tard.png': 'DinoSprites_tard.gif',
+    'DinoSprites - doux.png': 'DinoSprites_doux.gif',
+    'DinoSprites - mort.png': 'DinoSprites_mort.gif',
+    'DinoSprites - vita.png': 'DinoSprites_vita.gif',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +32,7 @@ class SkinSelectorMenu extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 100),
                 child: Column(
-                  children: [
-                    const Text(
+                  children: [                    const Text(
                       'Chọn Skin Dino',
                       style: TextStyle(fontSize: 30, color: Colors.white),
                     ),
@@ -37,44 +40,56 @@ class SkinSelectorMenu extends StatelessWidget {
                     Expanded(
                       child: Consumer<GameSettings>(
                         builder: (context, settings, _) {
-                          return GridView.count(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 20,
-                            crossAxisSpacing: 20,
-                            children: [
-                              'DinoSprites - tard.png',
-                              'DinoSprites - doux.png',
-                              'DinoSprites - mort.png',
-                              'DinoSprites - vita.png',
-                            ].map((skin) => GestureDetector(
-                              onTap: () {
-                                settings.updateDinoSkin(skin);
-                                settings.saveToFirestore();
-                              },
+                          return GridView.builder(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 1,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                            ),                            itemCount: skinPreviews.length,
+                            itemBuilder: (context, index) {
+                              final skin = skinPreviews.keys.elementAt(index);
+                              final gifName = skinPreviews[skin]!;
+                              final displayName = skin
+                                  .replaceAll('DinoSprites - ', '')
+                                  .replaceAll('.png', '');
+                              
+                              return GestureDetector(
+                                onTap: () async {
+                                  settings.updateDinoSkin(skin);
+                                  await settings.saveToFirestore();                                  await game.reloadDino();
+                                },
                               child: Container(
                                 decoration: BoxDecoration(
                                   border: settings.dinoSkin == skin
                                     ? Border.all(color: Colors.yellow, width: 3)
                                     : null,
                                   color: Colors.black26,
-                                ),
-                                child: Column(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),                                child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
+                                    // Animated GIF preview
                                     Image.asset(
-                                      'assets/images/Dino/$skin',
-                                      width: 100,
+                                      'assets/images/Dino/${skinPreviews[skin]}',
+                                      width: 120,
                                       height: 100,
+                                      fit: BoxFit.contain,
                                     ),
                                     const SizedBox(height: 10),
                                     Text(
                                       skin.replaceAll('DinoSprites - ', '').replaceAll('.png', ''),
-                                      style: const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                            )).toList(),
+                              );
+                            },
                           );
                         },
                       ),

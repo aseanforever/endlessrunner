@@ -79,8 +79,8 @@ flutter:
     - assets/images/Dino/
     - assets/images/parallax/
     - assets/images/parallax/default/
-    - assets/images/parallax/desert/
     - assets/images/parallax/forest/
+    - assets/images/parallax/desert/
     - assets/images/AngryPig/
     - assets/images/Bat/
     - assets/images/Rino/
