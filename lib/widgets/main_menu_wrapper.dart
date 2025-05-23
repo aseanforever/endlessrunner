@@ -1,6 +1,7 @@
-import 'package:endlessrunner/widgets/multiplayer_game_over_menu.dart';
 import 'package:endlessrunner/widgets/pause_menu.dart';
 import 'package:endlessrunner/widgets/settings_menu.dart';
+import 'package:endlessrunner/widgets/skin_selector_menu.dart';
+import 'package:endlessrunner/widgets/background_selector_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:flame/camera.dart';
@@ -24,13 +25,14 @@ class MainMenuWrapper extends StatelessWidget {
           ),
         ),
         overlayBuilderMap: {
-      MainMenu.id: (_, game) => MainMenu(game),
-      PauseMenu.id: (_, game) => PauseMenu(game),
-      Hud.id: (_, game) => Hud(game),
-      GameOverMenu.id: (_, game) => GameOverMenu(game),
-      SettingsMenu.id: (_, game) => SettingsMenu(game),
-      MultiplayerGameOverMenu.id: (_, game) => MultiplayerGameOverMenu(game),
-      },
+          MainMenu.id: (_, game) => MainMenu(game),
+          PauseMenu.id: (_, game) => PauseMenu(game),
+          Hud.id: (_, game) => Hud(game),
+          GameOverMenu.id: (_, game) => GameOverMenu(game),
+          SettingsMenu.id: (_, game) => SettingsMenu(game),
+          SkinSelectorMenu.id: (_, game) => SkinSelectorMenu(game),
+          BackgroundSelectorMenu.id: (_, game) => BackgroundSelectorMenu(game),
+        },
         initialActiveOverlays: const [MainMenu.id],
         gameFactory: () => DinoRun(
           camera: CameraComponent.withFixedResolution(

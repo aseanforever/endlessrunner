@@ -64,7 +64,7 @@ class GameOverMenu extends StatelessWidget {
                         ),
                       ),
                       onPressed: () {
-                        game.overlays.clear();
+                        game.overlays.remove(GameOverMenu.id);
                         game.overlays.add(Hud.id);
                         game.resumeEngine();
                         game.reset();
@@ -80,7 +80,7 @@ class GameOverMenu extends StatelessWidget {
                         ),
                       ),
                       onPressed: () {
-                        game.overlays.clear();
+                        game.overlays.remove(GameOverMenu.id);
                         game.overlays.add(MainMenu.id);
                         game.resumeEngine();
                         game.reset();

@@ -1,12 +1,13 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../game/dino_run.dart';
 import '/widgets/main_menu.dart';
 import '/game/audio_manager.dart';
 import '/models/game_settings.dart';
+import 'skin_selector_menu.dart';
+import 'background_selector_menu.dart';
+import 'skin_background_selector.dart';
 
 class SettingsMenu extends StatelessWidget {
   static const id = 'SettingsMenu';
@@ -28,10 +29,10 @@ class SettingsMenu extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               color: Colors.black.withAlpha(100),
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 100),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Selector<GameSettings, bool>(
                       selector: (_, settings) => settings.bgm,
@@ -74,6 +75,29 @@ class SettingsMenu extends StatelessWidget {
                         );
                       },
                     ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        game.overlays.remove(SettingsMenu.id);
+                        game.overlays.add(SkinSelectorMenu.id);
+                      },
+                      child: const Text(
+                        'Chọn Skin Dino',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        game.overlays.remove(SettingsMenu.id);
+                        game.overlays.add(BackgroundSelectorMenu.id);
+                      },
+                      child: const Text(
+                        'Chọn Background',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     TextButton(
                       onPressed: () {
                         game.overlays.remove(SettingsMenu.id);

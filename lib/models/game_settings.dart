@@ -5,11 +5,15 @@ class GameSettings extends ChangeNotifier {
   final String uid;
   bool bgm;
   bool sfx;
+  String dinoSkin;
+  String background;
 
   GameSettings({
     required this.uid,
     this.bgm = true,
     this.sfx = true,
+    this.dinoSkin = 'DinoSprites - tard.png',
+    this.background = 'default',
   });
 
   factory GameSettings.fromMap(Map<String, dynamic> data, String uid) {
@@ -17,6 +21,8 @@ class GameSettings extends ChangeNotifier {
       uid: uid,
       bgm: data['bgm'] ?? true,
       sfx: data['sfx'] ?? true,
+      dinoSkin: data['dinoSkin'] ?? 'DinoSprites - tard.png',
+      background: data['background'] ?? 'default',
     );
   }
 
@@ -24,6 +30,8 @@ class GameSettings extends ChangeNotifier {
     return {
       'bgm': bgm,
       'sfx': sfx,
+      'dinoSkin': dinoSkin,
+      'background': background,
     };
   }
 
@@ -46,6 +54,16 @@ class GameSettings extends ChangeNotifier {
 
   void updateSfx(bool value) {
     sfx = value;
+    notifyListeners();
+  }
+
+  void updateDinoSkin(String value) {
+    dinoSkin = value;
+    notifyListeners();
+  }
+
+  void updateBackground(String value) {
+    background = value;
     notifyListeners();
   }
 }

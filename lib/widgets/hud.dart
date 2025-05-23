@@ -16,11 +16,10 @@ class Hud extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamProvider<PlayerModel?>.value(
       value: PlayerModel.listenToPlayer(game.playerModel.uid),
-      initialData: game.playerModel,
+      initialData: null,
       child: Padding(
         padding: const EdgeInsets.only(top: 10.0),
-        child: Consumer<PlayerModel?>(builder: (context, streamPlayerModel, child) {
-          final PlayerModel? displayPlayerModel = streamPlayerModel ?? game.playerModel;
+        child: Consumer<PlayerModel?>(builder: (context, playerModel, child) {
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,7 +27,7 @@ class Hud extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    'Score: ${displayPlayerModel?.currentScore ?? 0}',
+                    'Score: ${playerModel?.currentScore ?? 0}',
                     style: const TextStyle(fontSize: 20, color: Colors.black),
                   ),
                 ],
@@ -43,13 +42,13 @@ class Hud extends StatelessWidget {
                 child: const Icon(Icons.pause, color: Colors.black),
               ),
 
-              if (displayPlayerModel != null)
+              if (playerModel != null)
                 Column(
                   children: [
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: List.generate(5, (index) {
-                        if (index < displayPlayerModel.lives) {
+                        if (index < playerModel.lives) {
                           return const Icon(
                             Icons.favorite,
                             color: Colors.red,
@@ -73,7 +72,7 @@ class Hud extends StatelessWidget {
                       ),
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: displayPlayerModel.health / 10,
+                        widthFactor: playerModel.health / 10,
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(5),

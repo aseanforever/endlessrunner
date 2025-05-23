@@ -48,7 +48,7 @@ class PlayerModel extends ChangeNotifier {
     await FirebaseFirestore.instance
         .collection('players')
         .doc(uid)
-        .set(toMap(), SetOptions(merge: true));
+        .set(toMap());
   }
 
   Future<void> increaseScore(int damage) async {

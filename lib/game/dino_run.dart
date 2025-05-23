@@ -1,11 +1,4 @@
 import 'package:endlessrunner/game/dino.dart';
-import 'package:endlessrunner/models/game_room.dart';
-import 'package:endlessrunner/respository/game_room_repository.dart';
-import 'package:endlessrunner/widgets/game_over_menu.dart';
-import 'package:endlessrunner/widgets/hud.dart';
-import 'package:endlessrunner/widgets/multiplayer_game_over_menu.dart';
-import 'package:endlessrunner/widgets/multiplayer_hud.dart';
-import 'package:endlessrunner/widgets/pause_menu.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
@@ -14,7 +7,10 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import '../respository/game_setting_respository.dart';
 import '../respository/player_respository.dart';
+import '../widgets/game_over_menu.dart';
+import '../widgets/hud.dart';
 import '../widgets/main_menu.dart';
+import '../widgets/pause_menu.dart';
 import '/models/game_settings.dart';
 import '/game/audio_manager.dart';
 import '/game/enemy_manager.dart';
@@ -23,20 +19,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flame/parallax.dart';
 
 class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
-  DinoRun({super.camera, this.roomId, this.isMultiplayer = false});
-  
+
+
+  DinoRun({super.camera});
   static const _imageAssets = [
-    'DinoSprites - tard.png',
+    'Dino/DinoSprites - tard.png',
     'AngryPig/Walk (36x30).png',
     'Bat/Flying (46x30).png',
     'Rino/Run (52x34).png',
-    'parallax/plx-1.png',
-    'parallax/plx-2.png',
-    'parallax/plx-3.png',
-    'parallax/plx-4.png',
-    'parallax/plx-5.png',
-    'parallax/plx-6.png',
+    'parallax/default/plx-1.png',
+    'parallax/default/plx-2.png',
+    'parallax/default/plx-3.png',
+    'parallax/default/plx-4.png',
+    'parallax/default/plx-5.png',
+    'parallax/default/plx-6.png',
   ];
+
+
 
   static const _audioAssets = [
     '8BitPlatformerLoop.wav',
@@ -48,16 +47,7 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
   late GameSettings gameSettings;
   late PlayerModel playerModel;
   late EnemyManager _enemyManager;
-  
-  // Multiplayer related fields
-  final bool isMultiplayer;
-  final String? roomId;
-  GameRoom? gameRoom;
-  String? currentPlayerId;
-  final GameRoomRepository _roomRepository = GameRoomRepository();
-  bool _gameStarted = false;
-  DateTime? _multiplayerStartTime;
-  
+
   final PlayerRepository playerRepository = PlayerRepository();
   final GameSettingsRepository settingsRepository = GameSettingsRepository();
 
@@ -72,101 +62,68 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
 
     playerModel = await _readPlayerData();
     gameSettings = await _readSettings();
-    currentPlayerId = playerModel.uid;
-
-    if (isMultiplayer && roomId != null) {
-      await _setupMultiplayerGame();
-    }
 
     await AudioManager.instance.init(_audioAssets, gameSettings);
     AudioManager.instance.startBgm('8BitPlatformerLoop.wav');
 
-    await images.loadAll(_imageAssets);
+    // Load all required assets first
+    await images.loadAll([
+      'Dino/DinoSprites - tard.png',
+      'Dino/DinoSprites - doux.png',
+      'Dino/DinoSprites - mort.png',
+      'Dino/DinoSprites - vita.png',
+      'AngryPig/Walk (36x30).png',
+      'Bat/Flying (46x30).png',
+      'Rino/Run (52x34).png',
+    ]);
+
+    // Load background assets for all themes
+    for (final theme in ['default', 'desert', 'forest']) {
+      await images.loadAll(
+        _getBackgroundImages(theme).map((path) => path).toList(),
+      );
+    }
+
     camera.viewfinder.position = camera.viewport.virtualSize * 0.5;
 
     final parallaxBackground = await loadParallaxComponent(
-      [
-        ParallaxImageData('parallax/plx-1.png'),
-        ParallaxImageData('parallax/plx-2.png'),
-        ParallaxImageData('parallax/plx-3.png'),
-        ParallaxImageData('parallax/plx-4.png'),
-        ParallaxImageData('parallax/plx-5.png'),
-        ParallaxImageData('parallax/plx-6.png'),
-      ],
+      _getBackgroundImages(gameSettings.background).map((e) => ParallaxImageData(e)).toList(),
       baseVelocity: Vector2(10, 0),
       velocityMultiplierDelta: Vector2(1.4, 0),
     );
 
     camera.backdrop.add(parallaxBackground);
-    
-    if (isMultiplayer) {
-      startGamePlay();
+  }
+
+  List<String> _getBackgroundImages(String theme) {
+    switch (theme) {
+      case 'desert':
+        return [
+          'parallax/desert/plx-1.png',
+          'parallax/desert/plx-2.png',
+          'parallax/desert/plx-3.png',
+          'parallax/desert/plx-4.png',
+          'parallax/desert/plx-5.png',
+        ];
+      case 'forest':
+        return [
+          'parallax/forest/plx-1.png',
+          'parallax/forest/plx-2.png',
+          'parallax/forest/plx-3.png',
+          'parallax/forest/plx-4.png',
+          'parallax/forest/plx-5.png',
+        ];
+      case 'default':
+      default:
+        return [
+          'parallax/default/plx-1.png',
+          'parallax/default/plx-2.png',
+          'parallax/default/plx-3.png',
+          'parallax/default/plx-4.png',
+          'parallax/default/plx-5.png',
+          'parallax/default/plx-6.png',
+        ];
     }
-  }
-  
-  Future<void> _setupMultiplayerGame() async {
-    if (roomId == null) return;
-    
-    gameRoom = await _roomRepository.getRoom(roomId!);
-    if (gameRoom == null) {
-      throw Exception('Game room not found');
-    }
-    
-    // Listen to room updates
-    _roomRepository.listenToRoom(roomId!).listen((updatedRoom) {
-      gameRoom = updatedRoom;
-      
-      // Start game when status changes to playing
-      if (updatedRoom.status == RoomStatus.playing && 
-          updatedRoom.startTime != null && 
-          !_gameStarted) {
-        _multiplayerStartTime = updatedRoom.startTime;
-        _startMultiplayerGame();
-      }
-      
-      // Handle game over
-      if (updatedRoom.status == RoomStatus.finished && 
-          _gameStarted) {
-        _handleMultiplayerGameOver();
-      }
-    });
-  }
-  
-  void _startMultiplayerGame() {
-    _gameStarted = true;
-  }
-  
-  void _handleMultiplayerGameOver() {
-    pauseEngine();
-    AudioManager.instance.pauseBgm();
-    
-    if (gameRoom!.winnerId == currentPlayerId) {
-      // Player won
-      overlays.add('MultiplayerGameOverMenu');
-    } else {
-      // Player lost
-      overlays.add('MultiplayerGameOverMenu');
-    }
-    
-    reset();
-  }
-  
-  // Methods to build overlays for standalone multiplayer game
-  Widget buildHud() {
-    return isMultiplayer ? MultiplayerHud(this) : Hud(this);
-  }
-  
-  Widget buildPauseMenu(BuildContext context) {
-    // Note: Pause menu will never actually be shown in multiplayer
-    return PauseMenu(this);
-  }
-  
-  Widget buildGameOverMenu(BuildContext context) {
-    return GameOverMenu(this);
-  }
-  
-  Widget buildMultiplayerGameOverMenu(BuildContext context) {
-    return MultiplayerGameOverMenu(this);
   }
 
   Future<PlayerModel> _readPlayerData() async {
@@ -186,6 +143,7 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
     return player;
   }
 
+
   Future<GameSettings> _readSettings() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -203,48 +161,32 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
     return settings;
   }
 
+  Future<void> reloadBackground() async {
+    camera.backdrop.removeAll(camera.backdrop.children);
+    
+    final parallaxBackground = await loadParallaxComponent(
+      _getBackgroundImages(gameSettings.background).map((e) => ParallaxImageData(e)).toList(),
+      baseVelocity: Vector2(10, 0),
+      velocityMultiplierDelta: Vector2(1.4, 0),
+    );
+
+    camera.backdrop.add(parallaxBackground);
+  }
+
   void startGamePlay() {
-    // Reset game state for a fresh start
-    playerModel.currentScore = 0;
-    playerModel.lives = 5;
-    playerModel.health = 10;
-    
-    // Clear existing components if any
-    _disconnectActors();
-    
-    // Create fresh game actors
-    _dino = Dino(images.fromCache('DinoSprites - tard.png'), playerModel);
+    _dino = Dino(images.fromCache('Dino/${gameSettings.dinoSkin}'), playerModel);
     _enemyManager = EnemyManager();
 
     world.add(_dino);
     world.add(_enemyManager);
-    
-    if (!isMultiplayer) {
-      overlays.remove(MainMenu.id);
-      overlays.add(Hud.id);
-    } else {
-      overlays.add(MultiplayerHud.id);
-    }
+    overlays.remove(MainMenu.id);
+    overlays.add(Hud.id);
   }
 
   void _disconnectActors() {
-    try {
-      // Kiểm tra xem _dino đã được khởi tạo chưa và có trong world không
-      if (world.children.whereType<Dino>().isNotEmpty) {
-        world.children.whereType<Dino>().forEach((dino) => dino.removeFromParent());
-      }
-      
-      // Kiểm tra xem _enemyManager đã được khởi tạo chưa và có trong world không
-      if (world.children.whereType<EnemyManager>().isNotEmpty) {
-        world.children.whereType<EnemyManager>().forEach((manager) {
-          manager.removeAllEnemies();
-          manager.removeFromParent();
-        });
-      }
-    } catch (e) {
-      // Xử lý ngoại lệ nếu có
-      print('Error in _disconnectActors: $e');
-    }
+    _dino.removeFromParent();
+    _enemyManager.removeAllEnemies();
+    _enemyManager.removeFromParent();
   }
 
   void reset() {
@@ -252,106 +194,54 @@ class DinoRun extends FlameGame with TapDetector, HasCollisionDetection {
     playerModel.currentScore = 0;
     playerModel.lives = 5;
     playerModel.resetPlayerData();
-    _gameStarted = false;
   }
 
   @override
   void update(double dt) {
-    try {
-      if (isMultiplayer && gameRoom != null && _gameStarted) {
-        // Update score in multiplayer room
-        if (roomId != null && currentPlayerId != null) {
-          _roomRepository.updatePlayerScore(roomId!, currentPlayerId!, playerModel.currentScore);
-        }
-        
-        // Check for player death in multiplayer
-        if (playerModel.lives <= 0 && gameRoom!.aliveStatus[currentPlayerId] == true) {
-          _reportPlayerDeath();
-        }
-      } else if (!isMultiplayer && world.children.whereType<Dino>().isNotEmpty && playerModel.lives <= 0) {
-        // Single player death
-        if (!overlays.isActive(GameOverMenu.id)) {
-          pauseEngine();
-          AudioManager.instance.pauseBgm();
-          overlays.add(GameOverMenu.id);
-          reset();
-        }
+    if (playerModel.lives <= 0) {
+
+
+      if (!overlays.isActive(GameOverMenu.id)) {
+        pauseEngine();
+        AudioManager.instance.pauseBgm();
+        overlays.add(GameOverMenu.id);
+
+        reset();
       }
-    } catch (e) {
-      print('Error in update: $e');
     }
     super.update(dt);
   }
-  
-  void _reportPlayerDeath() async {
-    try {
-      if (roomId != null && currentPlayerId != null && 
-          gameRoom != null && gameRoom!.aliveStatus[currentPlayerId] == true) {
-        await _roomRepository.reportPlayerDeath(roomId!, currentPlayerId!);
-      }
-    } catch (e) {
-      print('Error reporting player death: $e');
-    }
-  }
-  
-  Future<void> setPlayerReady(bool ready) async {
-    if (roomId != null && currentPlayerId != null) {
-      await _roomRepository.updateReadyStatus(roomId!, currentPlayerId!, ready);
-    }
-  }
+
 
   @override
   void onTapDown(TapDownInfo info) {
-    // Kiểm tra xem _dino đã được khởi tạo và game không ở trạng thái dừng
-    try {
-      if ((overlays.isActive(Hud.id) || overlays.isActive(MultiplayerHud.id)) && 
-          world.children.whereType<Dino>().isNotEmpty) {
-        // Tìm Dino trong world thay vì truy cập _dino trực tiếp
-        final dino = world.children.whereType<Dino>().first;
-        dino.jump();
-      }
-    } catch (e) {
-      print('Error in onTapDown: $e');
+    if (overlays.isActive(Hud.id)) {
+      _dino.jump();
     }
     super.onTapDown(info);
   }
 
   @override
   void lifecycleStateChange(AppLifecycleState state) {
-    // In multiplayer, we don't handle pause/resume the same way as singleplayer
-    if (isMultiplayer) {
-      switch (state) {
-        case AppLifecycleState.resumed:
+    switch (state) {
+      case AppLifecycleState.resumed:
+        if (!(overlays.isActive(PauseMenu.id)) &&
+            !(overlays.isActive(GameOverMenu.id))) {
           resumeEngine();
-          break;
-        case AppLifecycleState.paused:
-        case AppLifecycleState.detached:
-        case AppLifecycleState.inactive:
-        case AppLifecycleState.hidden:
-          pauseEngine();
-          break;
-      }
-    } else {
-      // Original pause/resume behavior for singleplayer
-      switch (state) {
-        case AppLifecycleState.resumed:
-          if (!(overlays.isActive(PauseMenu.id)) &&
-              !(overlays.isActive(GameOverMenu.id))) {
-            resumeEngine();
-          }
-          break;
-        case AppLifecycleState.paused:
-        case AppLifecycleState.detached:
-        case AppLifecycleState.inactive:
-        case AppLifecycleState.hidden:
-          if (overlays.isActive(Hud.id)) {
-            overlays.remove(Hud.id);
-            overlays.add(PauseMenu.id);
-          }
-          pauseEngine();
-          break;
-      }
+        }
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        if (overlays.isActive(Hud.id)) {
+          overlays.remove(Hud.id);
+          overlays.add(PauseMenu.id);
+        }
+        pauseEngine();
+        break;
     }
     super.lifecycleStateChange(state);
   }
+
 }
