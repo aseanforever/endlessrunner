@@ -8,6 +8,7 @@ class PlayerModel extends ChangeNotifier {
   int currentScore;
   int highscore;
   DateTime? highScoreDateTime;
+  bool _isMultiplayer = false;
 
   PlayerModel({
     required this.uid,
@@ -45,10 +46,12 @@ class PlayerModel extends ChangeNotifier {
   }
 
   Future<void> saveToFirestore() async {
-    await FirebaseFirestore.instance
-        .collection('players')
-        .doc(uid)
-        .set(toMap());
+    if (!_isMultiplayer) {
+      await FirebaseFirestore.instance
+          .collection('players')
+          .doc(uid)
+          .set(toMap());
+    }
   }
 
   Future<void> increaseScore(int damage) async {
@@ -57,7 +60,9 @@ class PlayerModel extends ChangeNotifier {
       highscore = currentScore;
       highScoreDateTime = DateTime.now();
     }
-    await saveToFirestore();
+    if (!_isMultiplayer) {
+      await saveToFirestore();
+    }
     notifyListeners();
   }
 
@@ -70,7 +75,9 @@ class PlayerModel extends ChangeNotifier {
         lives = 0;
       }
     }
-    await saveToFirestore();
+    if (!_isMultiplayer) {
+      await saveToFirestore();
+    }
     notifyListeners();
   }
 
@@ -78,9 +85,19 @@ class PlayerModel extends ChangeNotifier {
     lives = 5;
     health = 10;
     currentScore = 0;
-    await saveToFirestore();
+    if (!_isMultiplayer) {
+      await saveToFirestore();
+    }
     notifyListeners();
   }
+
+  void setMultiplayerMode(bool isMultiplayer) {
+    _isMultiplayer = isMultiplayer;
+    // In multiplayer mode, we don't automatically save to Firestore
+    // as the multiplayer service handles game data synchronization
+  }
+
+  bool get isMultiplayer => _isMultiplayer;
 
   static Stream<PlayerModel?> listenToPlayer(String uid) {
     return FirebaseFirestore.instance

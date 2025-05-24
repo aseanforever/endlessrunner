@@ -1,13 +1,14 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../game/dino_run.dart';
 import '/widgets/main_menu.dart';
 import '/game/audio_manager.dart';
 import '/models/game_settings.dart';
 import 'skin_selector_menu.dart';
 import 'background_selector_menu.dart';
-import 'skin_background_selector.dart';
 
 class SettingsMenu extends StatelessWidget {
   static const id = 'SettingsMenu';
@@ -82,7 +83,7 @@ class SettingsMenu extends StatelessWidget {
                         game.overlays.add(SkinSelectorMenu.id);
                       },
                       child: const Text(
-                        'Chọn Skin Dino',
+                        'Choose Skin Dino',
                         style: TextStyle(fontSize: 20),
                       ),
                     ),
@@ -93,7 +94,7 @@ class SettingsMenu extends StatelessWidget {
                         game.overlays.add(BackgroundSelectorMenu.id);
                       },
                       child: const Text(
-                        'Chọn Background',
+                        'Choose Background',
                         style: TextStyle(fontSize: 20),
                       ),
                     ),

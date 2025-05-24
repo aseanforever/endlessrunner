@@ -55,7 +55,7 @@ class BackgroundSelectorMenu extends StatelessWidget {
                 child: Column(
                   children: [
                     const Text(
-                      'Chọn Background',
+                      'Choose Background',
                       style: TextStyle(fontSize: 30, color: Colors.white),
                     ),
                     const SizedBox(height: 40),
@@ -68,7 +68,8 @@ class BackgroundSelectorMenu extends StatelessWidget {
                             itemBuilder: (context, index) {
                               final theme = backgrounds.keys.elementAt(index);
                               final images = backgrounds[theme]!;
-                              return GestureDetector(                                onTap: () async {
+                              return GestureDetector(
+                                onTap: () async {
                                   settings.updateBackground(theme);
                                   await settings.saveToFirestore();
                                   await game.reloadBackground();
@@ -111,7 +112,8 @@ class BackgroundSelectorMenu extends StatelessWidget {
                           );
                         },
                       ),
-                    ),                    TextButton(
+                    ),
+                    TextButton(
                       onPressed: () async {
                         await game.reloadBackground();
                         game.overlays.remove(BackgroundSelectorMenu.id);
@@ -128,4 +130,4 @@ class BackgroundSelectorMenu extends StatelessWidget {
       ),
     );
   }
-}
+} 

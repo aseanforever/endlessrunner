@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:endlessrunner/widgets/ranking_menu.dart';
+import 'package:endlessrunner/widgets/multiplayer_lobby.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -49,6 +50,18 @@ class MainMenu extends StatelessWidget {
                     },
                     child: const Text(
                       'Start',
+                      style: TextStyle(
+                        fontSize: 30,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      game.overlays.remove(MainMenu.id);
+                      game.overlays.add(MultiplayerLobby.id);
+                    },
+                    child: const Text(
+                      'Multiplayer',
                       style: TextStyle(
                         fontSize: 30,
                       ),
